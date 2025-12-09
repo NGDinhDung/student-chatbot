@@ -1,124 +1,130 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Hỗ Trợ Sinh Viên</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hỗ trợ Học tập - Chatbox Sinh viên</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
-        /* CSS đơn giản cho khung chat */
-        .chat-container {
-            height: 70vh;
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-            padding: 15px;
-            background-color: #f8f9fa;
+        /* Tùy chỉnh CSS cho scrollbar để đẹp hơn */
+        .scroll-area::-webkit-scrollbar {
+            width: 8px;
         }
-        .message {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 15px;
-            max-width: 80%;
-            clear: both;
+        .scroll-area::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1; /* slate-300 */
+            border-radius: 4px;
         }
-        .user-message {
-            background-color: #007bff;
-            color: white;
-            margin-left: auto;
-            float: right;
+        .scroll-area {
+            scrollbar-color: #cbd5e1 transparent;
+            scrollbar-width: thin;
         }
-        .bot-message {
-            background-color: #e9ecef;
-            color: #343a40;
-            margin-right: auto;
-            float: left;
+        /* Chiều cao cố định cho chat history */
+        #chat-history {
+            height: 65vh; /* Điều chỉnh chiều cao cho phù hợp */
         }
     </style>
 </head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">🤖 Chatbot Hỗ Trợ Học Tập</h1>
-        <div class="card shadow">
-            <div class="card-body">
-                <div id="chat-box" class="chat-container">
+<body>
+    <header class="w-full"></header>
+
+    <main class="app-wrapper flex items-stretch justify-center bg-sky-50 px-4 py-6">
+        <section class="w-full max-w-6xl bg-white/90 shadow-xl rounded-2xl border border-sky-100 flex flex-col lg:flex-row overflow-hidden">
+            
+            <div class="w-full lg:w-2/3 flex flex-col border-b lg:border-b-0 lg:border-r border-sky-100">
+                <div id="chat-header" class="flex items-center gap-3 px-5 py-4 bg-sky-600 text-white">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-white/15">
+                        <svg aria-hidden="true" class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                            <path d="M5 4.5C5 4.224 5.224 4 5.5 4H18a1 1 0 0 1 1 1v13.5a.5.5 0 0 1-.79.407L16 17.25l-2.21 1.657a.5.5 0 0 1-.58 0L11 17.25l-2.21 1.657A.5.5 0 0 1 8 18.5V5a1 1 0 0 0-1-1H5.5A.5.5 0 0 1 5 4.5Z" fill="currentColor" />
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h2 id="chatbox-title" class="text-lg font-semibold leading-tight">Trợ lý ảo Hỗ trợ Học tập</h2>
+                        <p class="text-xs text-sky-100 mt-0.5">Hỏi về chương trình đào tạo, đăng ký môn, lịch học, lịch thi,...</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 text-xs">
+                        <span class="inline-flex w-2 h-2 rounded-full bg-emerald-300"></span> <span>Trực tuyến</span>
+                    </div>
                 </div>
+
+                <div id="chat-history" class="flex-1 px-5 py-4 space-y-3 overflow-y-auto scroll-area bg-white">
+                    </div>
+
+                <form id="chat-form" class="px-5 py-4 bg-slate-50 border-t border-slate-200">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <div class="relative flex-1">
+                            <textarea id="chat-input" rows="1" class="w-full resize-none rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 focus:outline-none" placeholder="Nhập câu hỏi..."></textarea>
+                            <div class="absolute right-2 bottom-1.5 flex items-center gap-2 text-[10px] text-slate-400"><span>Nhấn Enter để gửi</span></div>
+                        </div>
+                        <button type="submit" id="send-button" class="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-sky-700 transition-colors">
+                            <span>Gửi</span>
+                            <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                <path d="M4.5 19.5 19.5 12 4.5 4.5 4.5 10.5 13.5 12 4.5 13.5 4.5 19.5Z" fill="currentColor" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="card-footer bg-white">
-                <div class="input-group">
-                    <input type="text" id="user-input" class="form-control" placeholder="Nhập câu hỏi của bạn..." onkeydown="if(event.key === 'Enter') sendMessage()">
-                    <button class="btn btn-primary" onclick="sendMessage()" id="send-button">Gửi</button>
+
+            <aside class="w-full lg:w-1/3 flex flex-col bg-sky-50/70">
+                <div class="flex-1 px-5 py-4 border-b border-sky-100">
+                    <h3 class="text-sm font-semibold text-sky-900 flex items-center gap-2">
+                        <span class="inline-flex w-6 h-6 items-center justify-center rounded-full bg-sky-600 text-white text-xs">i</span> 
+                        <span>Thông báo quan trọng</span>
+                    </h3>
+                    <div class="mt-3 space-y-2.5 max-h-[60%] overflow-y-auto scroll-area pr-1">
+                        <div class="rounded-xl bg-white/80 border border-sky-100 px-3 py-2.5">
+                            <p class="text-xs font-semibold text-sky-900">Hạn đăng ký môn học HK 1/2025</p>
+                            <p class="text-xs text-slate-700 mt-0.5">Thời gian: <span class="font-medium">01/08 - 15/08/2025</span>.</p>
+                        </div>
+                        <div class="rounded-xl bg-white/80 border border-sky-100 px-3 py-2.5">
+                            <p class="text-xs font-semibold text-sky-900">Cập nhật lịch thi giữa kỳ</p>
+                            <p class="text-xs text-slate-700 mt-0.5">Công bố vào ngày <span class="font-medium">20/09/2025</span>.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 rounded-xl border border-dashed border-sky-200 bg-sky-50 px-3 py-2.5">
+                           <p class="text-xs font-semibold text-sky-900 flex items-center gap-1.5"><span>Nhận hỗ trợ qua Telegram</span></p>
+                           <p class="text-xs text-slate-700 mt-0.5">Tính năng đang phát triển (Backend integration).</p>
+                    </div>
                 </div>
-            </div>
+
+                <div class="px-5 py-4 bg-white/90">
+                    <h3 id="feedback-title" class="text-sm font-semibold text-slate-900">Góp ý về trải nghiệm chatbox</h3>
+                    <form id="feedback-form" class="mt-3 space-y-2.5">
+                        <div>
+                            <input id="feedback-name" type="text" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs focus:ring-sky-200 focus:outline-none" placeholder="Nhập họ tên (tùy chọn)">
+                        </div>
+                        <div>
+                            <select id="feedback-type" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs focus:ring-sky-200 focus:outline-none">
+                                <option value="rất hài lòng">Rất hài lòng</option>
+                                <option value="hài lòng">Hài lòng</option>
+                                <option value="bình thường">Bình thường</option>
+                                <option value="chưa tốt">Chưa tốt</option>
+                            </select>
+                        </div>
+                        <div>
+                            <textarea id="feedback-message" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs resize-none focus:ring-sky-200 focus:outline-none" placeholder="Nội dung góp ý..."></textarea>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                            <button type="submit" id="feedback-submit" class="inline-flex items-center justify-center rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-700 transition-colors">Gửi phản hồi</button>
+                            <p id="feedback-status" class="text-[11px] text-slate-500"></p>
+                        </div>
+                    </form>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <footer class="w-full px-4 pb-4">
+        <div class="w-full max-w-6xl mx-auto flex items-center justify-between text-[11px] text-slate-500">
+            <span id="app-subtitle-footer">Chatbox hỗ trợ sinh viên.</span>
+            <span>Demo Version 1.0</span>
         </div>
-    </div>
+    </footer>
 
-    <script>
-        function displayMessage(message, sender) {
-            const chatBox = document.getElementById('chat-box');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${sender}-message`;
-            msgDiv.innerHTML = message;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        async function loadHistory() {
-            const userId = 'guest_user'; 
-
-            try {
-                const res = await fetch(`/history?user_id=${userId}`); 
-                const data = await res.json();
-
-                if (data.history && data.history.length > 0) {
-                    data.history.forEach(item => {
-                        displayMessage(item.message, item.role);
-                    });
-                } else {
-                    displayMessage('Chào bạn! Tôi là chatbot hỗ trợ sinh viên. Tôi có thể giúp bạn giải đáp thắc mắc về chương trình học, thời khóa biểu và quy định nhà trường.', 'bot');
-                }
-            } catch (error) {
-                console.error("Lỗi khi tải lịch sử:", error);
-                displayMessage('Không thể tải lịch sử chat. Hãy thử gửi tin nhắn mới.', 'bot');
-            }
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const message = input.value.trim();
-            const sendButton = document.getElementById('send-button');
-
-            if (message === '') return;
-
-            displayMessage(message, 'user');
-            input.value = '';
-            sendButton.disabled = true;
-
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ user_id: 'guest_user', message: message })
-                });
-
-                const data = await response.json();
-
-                if (data.answer) {
-                    displayMessage(data.answer, 'bot');
-                } else if (data.error) {
-                    displayMessage(`Lỗi: ${data.error}`, 'bot');
-                }
-
-            } catch (error) {
-                console.error('Lỗi khi gửi tin nhắn:', error);
-                displayMessage('Đã xảy ra lỗi kết nối server. Vui lòng kiểm tra lại.', 'bot');
-            } finally {
-                sendButton.disabled = false;
-            }
-        }
-
-        window.onload = loadHistory;
-    </script>
+    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
 </html>

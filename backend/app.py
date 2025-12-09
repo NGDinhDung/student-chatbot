@@ -2,7 +2,7 @@
 
 import os
 import sqlite3
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, url_for
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -13,6 +13,7 @@ api_key = os.getenv("GEMINI_API_KEY")
 DATABASE = 'backend/chatbot.db'
 
 if not api_key:
+    # Lỗi này chỉ xảy ra khi chạy python backend/app.py lần đầu
     raise ValueError("GEMINI_API_KEY không được tìm thấy. Hãy kiểm tra file .env.")
 
 client = genai.Client(api_key=api_key)
@@ -51,8 +52,9 @@ def get_history(user_id, limit=5):
     # TRẢ VỀ FORMAT ĐƠN GIẢN VỚI KEY 'text'
     history = []
     for row in messages:
+        # Chuyển role 'assistant' thành 'model' và dùng key 'text'
         role = 'user' if row['role'] == 'user' else 'model'
-        history.append({"role": role, "text": row['message']}) # Dùng key 'text'
+        history.append({"role": role, "text": row['message']}) 
         
     return history
 
@@ -95,7 +97,7 @@ def ask_gemini(question, history=None, system_prompt="Bạn là chatbot hỗ tr�
     except Exception as e:
         # IN LỖI CHI TIẾT RA TERMINAL để dễ debug
         print(f"LỖI CHI TIẾT KHI GỌI API: {e}")
-        # TRẢ VỀ CHUỖI LỖI ĐƠN GIẢN, TRÁNH LƯU CHUỖI LỖI LỚN VÀO DB
+        # Trả về chuỗi lỗi đơn giản, tránh lưu chuỗi lỗi lớn vào DB
         return "Đã xảy ra lỗi kết nối hoặc xác thực API. Vui lòng thử lại."
 
 
@@ -111,11 +113,9 @@ def history():
     """Endpoint trả về lịch sử hội thoại dưới dạng JSON."""
     user_id = request.args.get("user_id", "guest_user")
     
-    # Dùng hàm get_history đã sửa
     messages = get_history(user_id, limit=999) 
     
-    # Chuyển đổi định dạng history đã sửa thành định dạng phù hợp cho JSON response
-    # Lưu ý: Chuyển key 'text' thành 'message' để JS hiểu
+    # Chuyển đổi định dạng history đã sửa (key 'text') thành định dạng JSON ('message')
     history_list = [{"role": item['role'], "message": item['text']} for item in messages]
     
     return jsonify({"history": history_list})
