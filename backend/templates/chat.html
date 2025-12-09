@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Hỗ Trợ Sinh Viên</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* CSS đơn giản cho khung chat */
+        .chat-container {
+            height: 70vh;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 80%;
+            clear: both;
+        }
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            margin-left: auto;
+            float: right;
+        }
+        .bot-message {
+            background-color: #e9ecef;
+            color: #343a40;
+            margin-right: auto;
+            float: left;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">🤖 Chatbot Hỗ Trợ Học Tập</h1>
+        <div class="card shadow">
+            <div class="card-body">
+                <div id="chat-box" class="chat-container">
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="input-group">
+                    <input type="text" id="user-input" class="form-control" placeholder="Nhập câu hỏi của bạn..." onkeydown="if(event.key === 'Enter') sendMessage()">
+                    <button class="btn btn-primary" onclick="sendMessage()" id="send-button">Gửi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function displayMessage(message, sender) {
+            const chatBox = document.getElementById('chat-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}-message`;
+            msgDiv.innerHTML = message;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function loadHistory() {
+            const userId = 'guest_user'; 
+
+            try {
+                const res = await fetch(`/history?user_id=${userId}`); 
+                const data = await res.json();
+
+                if (data.history && data.history.length > 0) {
+                    data.history.forEach(item => {
+                        displayMessage(item.message, item.role);
+                    });
+                } else {
+                    displayMessage('Chào bạn! Tôi là chatbot hỗ trợ sinh viên. Tôi có thể giúp bạn giải đáp thắc mắc về chương trình học, thời khóa biểu và quy định nhà trường.', 'bot');
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải lịch sử:", error);
+                displayMessage('Không thể tải lịch sử chat. Hãy thử gửi tin nhắn mới.', 'bot');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            const sendButton = document.getElementById('send-button');
+
+            if (message === '') return;
+
+            displayMessage(message, 'user');
+            input.value = '';
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: 'guest_user', message: message })
+                });
+
+                const data = await response.json();
+
+                if (data.answer) {
+                    displayMessage(data.answer, 'bot');
+                } else if (data.error) {
+                    displayMessage(`Lỗi: ${data.error}`, 'bot');
+                }
+
+            } catch (error) {
+                console.error('Lỗi khi gửi tin nhắn:', error);
+                displayMessage('Đã xảy ra lỗi kết nối server. Vui lòng kiểm tra lại.', 'bot');
+            } finally {
+                sendButton.disabled = false;
+            }
+        }
+
+        window.onload = loadHistory;
+    </script>
+</body>
+</html>
