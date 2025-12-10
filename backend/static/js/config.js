@@ -110,14 +110,16 @@ document.addEventListener("DOMContentLoaded", () => {
     onConfigChange(defaultConfig);
 });
 
-// Logic Feedback (Demo)
+// Logic Feedback (ĐÃ SỬA: Gọi API Flask)
 const feedbackForm = document.getElementById("feedback-form");
 const feedbackStatus = document.getElementById("feedback-status");
 const feedbackSubmit = document.getElementById("feedback-submit");
 
 if (feedbackForm) {
-    feedbackForm.addEventListener("submit", function (e) {
+    feedbackForm.addEventListener("submit", async function (e) {
         e.preventDefault();
+        const name = document.getElementById("feedback-name").value.trim();
+        const type = document.getElementById("feedback-type").value;
         const message = document.getElementById("feedback-message").value.trim();
 
         if (!message) {
@@ -130,11 +132,28 @@ if (feedbackForm) {
         feedbackStatus.textContent = "Đang gửi...";
         feedbackStatus.style.color = "#6b7280";
 
-        setTimeout(() => {
+        try {
+            const response = await fetch('/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, type, message })
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                feedbackStatus.textContent = "Đã gửi thành công. Cảm ơn bạn!";
+                feedbackStatus.style.color = "#15803d";
+                feedbackForm.reset();
+            } else {
+                feedbackStatus.textContent = data.message || "Lỗi server khi gửi phản hồi.";
+                feedbackStatus.style.color = "#b91c1c";
+            }
+        } catch (error) {
+            feedbackStatus.textContent = "Lỗi kết nối mạng.";
+            feedbackStatus.style.color = "#b91c1c";
+        } finally {
             feedbackSubmit.disabled = false;
-            feedbackForm.reset();
-            feedbackStatus.textContent = "Đã gửi thành công (Demo).";
-            feedbackStatus.style.color = "#15803d";
-        }, 700);
+        }
     });
 }

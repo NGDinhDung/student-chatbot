@@ -1,4 +1,4 @@
-# File: backend/init_db.py
+# File: backend/init_db.py (ĐÃ SỬA NỘI DUNG FAQ VÀ TÊN TRƯỜNG)
 
 import sqlite3
 
@@ -29,8 +29,17 @@ def init_db():
     )
     """)
 
-    # Thêm dữ liệu mẫu vào FAQ (cho mục đích demo sau này)
-    cursor.execute("INSERT OR IGNORE INTO faq (id, question, answer, intent_category) VALUES (1, 'Học kỳ này có bao nhiêu học phần?', 'Sinh viên có thể tra cứu thông tin học phần chính thức trên cổng thông tin sinh viên.', 'General')")
+    # Thêm dữ liệu mẫu vào FAQ (Đã sửa lỗi cú pháp và nội dung)
+    
+    # Intent: HOI_HOC_PHAN
+    cursor.execute("INSERT OR IGNORE INTO faq (id, question, answer, intent_category) VALUES (1, 'Học kỳ này có bao nhiêu học phần?', 'Thông tin chi tiết về số lượng học phần, tín chỉ và nội dung môn học được công bố chính thức trên cổng thông tin sinh viên của Trường Đại học Giao thông Vận tải (UTH).', 'HOI_HOC_PHAN')")
+    
+    # Intent: HOI_LICH_THI
+    cursor.execute("INSERT OR IGNORE INTO faq (id, question, answer, intent_category) VALUES (2, 'Khi nào có lịch thi cuối kỳ?', 'Lịch thi chính thức sẽ được Phòng Đào tạo công bố trên cổng thông tin sinh viên trước 2 tuần so với ngày thi đầu tiên của Trường Đại học Giao thông Vận tải (UTH).', 'HOI_LICH_THI')")
+    
+    # Intent: HOI_LICH_HOC
+    cursor.execute("INSERT OR IGNORE INTO faq (id, question, answer, intent_category) VALUES (3, 'Thời khóa biểu của em ở đâu?', 'Bạn vui lòng đăng nhập vào cổng thông tin sinh viên, chọn mục \"Thời khóa biểu cá nhân\" để xem chi tiết lịch học của Trường Đại học Giao thông Vận tải (UTH).', 'HOI_LICH_HOC')")
+
 
     conn.commit()
     conn.close()
