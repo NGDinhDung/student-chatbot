@@ -1,4 +1,4 @@
-# File: backend/app.py (PHIÊN BẢN HOÀN CHỈNH - SỬA LỖI ĐỊNH DẠNG & LOGIC UTH)
+# File: backend/app.py (PHIÊN BẢN ỔN ĐỊNH: DÙNG TYPES.PART(TEXT=...))
 
 import os
 import sqlite3
@@ -13,7 +13,7 @@ load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 DATABASE = 'backend/chatbot.db'
 
-# Định nghĩa các Ý định (Intents) mà bot có thể xử lý qua FAQ
+# Định nghĩa các Ý định (Intents) - UTH
 FAQ_INTENTS = {
     "HOI_HOC_PHAN": "Hỏi về số lượng học phần, tín chỉ, hoặc nội dung học phần.",
     "HOI_LICH_THI": "Hỏi về lịch thi, thời gian thi giữa kỳ/cuối kỳ.",
@@ -55,7 +55,6 @@ def get_history(user_id, limit=5):
     
     messages.reverse() 
     
-    # TRẢ VỀ FORMAT ĐƠN GIẢN VỚI KEY 'text'
     history = []
     for row in messages:
         role = 'user' if row['role'] == 'user' else 'model'
@@ -68,18 +67,17 @@ def get_history(user_id, limit=5):
 def get_faq_answer(question):
     """
     Sử dụng Gemini để phân loại câu hỏi và truy vấn database FAQ.
-    Trả về câu trả lời từ DB nếu ý định được nhận dạng, nếu không trả về None.
     """
     tool_schema = types.Schema(
         type=types.Type.OBJECT,
         properties={
             "intent": types.Schema(
                 type=types.Type.STRING,
-                description=f"Tên ý định được xác định từ câu hỏi của người dùng. Phải là một trong các giá trị sau: {list(FAQ_INTENTS.keys())}, hoặc 'CHUNG' nếu câu hỏi không thuộc phạm vi FAQ."
+                description=f"Tên ý định từ câu hỏi. Phải là một trong: {list(FAQ_INTENTS.keys())}, hoặc 'CHUNG'."
             ),
             "keyword": types.Schema(
                 type=types.Type.STRING,
-                description="Từ khóa/cụm từ chính để thực hiện truy vấn database (ví dụ: 'học kỳ này' hoặc 'lịch thi')."
+                description="Từ khóa chính để truy vấn."
             )
         },
         required=["intent", "keyword"]
@@ -87,20 +85,20 @@ def get_faq_answer(question):
     
     intent_list = [f"'{k}' ({v})" for k, v in FAQ_INTENTS.items()]
     system_prompt_faq = f"""
-    Bạn là một hệ thống phân loại câu hỏi cho Trường Đại học Giao thông Vận tải (UTH).
-    Nhiệm vụ của bạn là phân tích câu hỏi của người dùng và xác định Ý định (Intent) của họ.
-    
-    Các Intent đã biết (FAQ) là: {", ".join(intent_list)}. Nếu không khớp, hãy dùng intent 'CHUNG'.
-    
-    Sau đó, tạo ra một JSON object tuân thủ schema đã cho. KHÔNG ĐƯỢC THÊM BẤT CẢNH VĂN BẢN NÀO NGOÀI JSON.
+    Bạn là hệ thống phân loại câu hỏi cho Trường Đại học Giao thông Vận tải (UTH).
+    Các Intent đã biết: {", ".join(intent_list)}. Nếu không khớp, dùng 'CHUNG'.
+    Trả về JSON object.
     """
     
     try:
-        # SỬA LỖI ĐỊNH DẠNG: Sử dụng types.Part.from_text() rõ ràng
+        # SỬA LỖI QUAN TRỌNG: Dùng types.Part(text=...) thay vì from_text
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=[
-                types.Content(role="user", parts=[types.Part.from_text(question)]) 
+                types.Content(
+                    role="user", 
+                    parts=[types.Part(text=question)] # ĐÂY LÀ CÁCH SỬA CHÍNH XÁC
+                ) 
             ],
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt_faq,
@@ -130,24 +128,24 @@ def get_faq_answer(question):
         
     return None 
 
-def ask_gemini(question, history=None, system_prompt="Bạn là chatbot hỗ trợ sinh viên của Trường Đại học Giao thông Vận tải (UTH). Hãy trả lời câu hỏi một cách thân thiện, chính xác và bám sát vai trò hỗ trợ học tập."):
+def ask_gemini(question, history=None, system_prompt="Bạn là chatbot hỗ trợ sinh viên của Trường Đại học Giao thông Vận tải (UTH). Hãy trả lời câu hỏi một cách thân thiện, chính xác."):
     """
-    Hàm gọi API Gemini (Generative) để tạo câu trả lời khi không tìm thấy trong FAQ.
+    Hàm gọi API Gemini (Generative) để tạo câu trả lời.
     """
     try:
         config = types.GenerateContentConfig(
-            system_instruction=system_prompt, 
+            system_instruction=system_prompt,
             temperature=0.7
         )
         
         gemini_history = []
         if history:
             for item in history:
-                # SỬA LỖI VALIDATION: Tạo Content bằng types.Part.from_text() rõ ràng cho lịch sử
+                # SỬA LỖI QUAN TRỌNG: Dùng types.Part(text=...) cho lịch sử
                 gemini_history.append(
                     types.Content(
                         role=item['role'], 
-                        parts=[types.Part.from_text(item['text'])] 
+                        parts=[types.Part(text=item['text'])] # CHÍNH XÁC HƠN
                     )
                 )
         
@@ -163,10 +161,10 @@ def ask_gemini(question, history=None, system_prompt="Bạn là chatbot hỗ tr�
         
     except Exception as e:
         print(f"LỖI CHI TIẾT KHI GỌI API: {e}")
-        return "Đã xảy ra lỗi kết nối hoặc xác thực API. Vui lòng thử lại."
+        return "Hiện tại hệ thống AI đang bận hoặc gặp lỗi kết nối. Bạn vui lòng thử lại sau ít phút nhé."
 
 
-# --- ENDPOINTS FLASK (Giữ nguyên) ---
+# --- ENDPOINTS FLASK ---
 
 @app.route("/")
 def index():
@@ -175,11 +173,8 @@ def index():
 @app.route("/history")
 def history():
     user_id = request.args.get("user_id", "guest_user")
-    
     messages = get_history(user_id, limit=999) 
-    
     history_list = [{"role": item['role'], "message": item['text']} for item in messages]
-    
     return jsonify({"history": history_list})
 
 @app.post("/chat")
@@ -194,13 +189,11 @@ def chat():
         
         # LOGIC HYBRID
         answer = get_faq_answer(question)
-        history = None 
-
+        
         if answer is None:
             history = get_history(user_id, limit=5)
             answer = ask_gemini(question, history=history)
         
-        # Lưu câu hỏi và trả lời
         save_message(user_id, 'user', question)
         save_message(user_id, 'assistant', answer)
 
@@ -214,20 +207,8 @@ def chat():
 def feedback():
     try:
         data = request.get_json()
-        name = data.get("name", "Ẩn danh")
-        rating = data.get("type", "Không đánh giá")
-        message = data.get("message", "Không có nội dung")
-
-        print("--- PHẢN HỒI MỚI ĐÃ ĐƯỢC NHẬN ---")
-        print(f"Người gửi: {name}")
-        print(f"Đánh giá: {rating}")
-        print(f"Nội dung: {message}")
-        print("---------------------------------")
-        
         return jsonify({"status": "success", "message": "Cảm ơn bạn đã phản hồi!"})
-
     except Exception as e:
-        print(f"Lỗi khi nhận phản hồi: {e}")
         return jsonify({"status": "error", "message": "Lỗi server khi xử lý phản hồi."}), 500
 
 # --- CHẠY SERVER FLASK ---
