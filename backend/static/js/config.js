@@ -1,7 +1,6 @@
 // File: backend/static/js/config.js
 // Logic cấu hình và cập nhật UI (Demo)
 
-// Cấu hình mặc định
 const defaultConfig = {
     background_color: "#0ea5e9",
     surface_color: "#ffffff",
@@ -18,7 +17,6 @@ const defaultConfig = {
     feedback_submit_text: "Gửi phản hồi"
 };
 
-// Truy cập DOM elements
 const domRefs = {
     body: document.body,
     mainWrapper: document.querySelector(".app-wrapper"),
@@ -33,7 +31,6 @@ const domRefs = {
     chatInput: document.getElementById("chat-input")
 };
 
-// Hàm cập nhật UI
 async function onConfigChange(config) {
     const cfg = config || defaultConfig;
     const bg = cfg.background_color || defaultConfig.background_color;
@@ -45,30 +42,25 @@ async function onConfigChange(config) {
     const baseFontSize = Number(cfg.font_size) || defaultConfig.font_size;
     const fontStack = `${fontFamily}, system-ui, -apple-system, sans-serif`;
 
-    // Áp dụng style
     domRefs.body.style.background = bg;
     domRefs.mainWrapper.style.background = "transparent";
     domRefs.card.style.backgroundColor = surface;
     domRefs.card.style.color = txt;
 
-    // Render Header
     const headerEl = domRefs.header;
     headerEl.innerHTML = "";
     
-    // Tạo cấu trúc header bằng JS 
     const headerInner = document.createElement("div");
     headerInner.className = "w-full max-w-6xl mx-auto px-4 pt-4 pb-1 flex items-center justify-between gap-3";
     
     const titleBlock = document.createElement("div");
     titleBlock.className = "flex items-center gap-3";
     
-    // Icon
     const iconWrap = document.createElement("div");
     iconWrap.className = "w-9 h-9 rounded-full flex items-center justify-center text-white";
     iconWrap.style.backgroundColor = secondary;
     iconWrap.innerHTML = `<svg viewBox="0 0 24 24" fill="none" class="w-5 h-5"><path d="M4 5a2 2 0 0 1 2-2h8.5a2 2 0 0 1 1.6.8l3.5 4.667a2 2 0 0 1 .4 1.2V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z" fill="currentColor"/></svg>`;
 
-    // Text
     const textWrap = document.createElement("div");
     const h1 = document.createElement("h1");
     h1.textContent = cfg.app_title || defaultConfig.app_title;
@@ -92,7 +84,6 @@ async function onConfigChange(config) {
     headerEl.style.background = `linear-gradient(135deg, ${bg}, ${secondary})`;
     headerEl.style.borderBottom = "1px solid rgba(15,23,42,0.05)";
 
-    // Áp dụng font và màu sắc cho các phần tử khác
     if (domRefs.chatboxTitle) domRefs.chatboxTitle.textContent = cfg.chatbox_title || defaultConfig.chatbox_title;
     if (domRefs.chatInput) domRefs.chatInput.placeholder = cfg.chatbox_placeholder || defaultConfig.chatbox_placeholder;
     if (domRefs.sendButton) domRefs.sendButton.style.backgroundColor = primary;
@@ -100,17 +91,14 @@ async function onConfigChange(config) {
     if (domRefs.feedbackSubmit) domRefs.feedbackSubmit.textContent = cfg.feedback_submit_text || defaultConfig.feedback_submit_text;
     if (domRefs.feedbackSubmit) domRefs.feedbackSubmit.style.backgroundColor = primary;
     
-    // Global Font
     domRefs.body.style.fontFamily = fontStack;
     domRefs.body.style.fontSize = baseFontSize + "px";
 }
 
-// Khởi chạy cấu hình mặc định khi load trang
 document.addEventListener("DOMContentLoaded", () => {
     onConfigChange(defaultConfig);
 });
 
-// Logic Feedback (ĐÃ SỬA: Gọi API Flask)
 const feedbackForm = document.getElementById("feedback-form");
 const feedbackStatus = document.getElementById("feedback-status");
 const feedbackSubmit = document.getElementById("feedback-submit");
